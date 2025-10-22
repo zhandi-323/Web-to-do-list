@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aplikasi To-Do List</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #f0f2f5;
+  }
+  .container {
+    max-width: 600px;
+    margin: 2rem auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    padding: 1rem 2rem 2rem 2rem;
+  }
+  h1, h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  input[type=text], input[type=password], input[type=date] {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  button {
+    background-color: #2d89e5;
+    border: none;
+    color: white;
+    padding: 0.6rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #1b5cb8;
+  }
+  .error {
+    color: red;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  #todoApp {
+    display: none;
+  }
+  #loginRegister {
+    max-width: 400px;
+    margin: 3rem auto;
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .tabs {
+    display: flex;
+    margin-bottom: 1rem;
+  }
+  .tab {
+    flex: 1;
+    padding: 0.7rem;
+    text-align: center;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    user-select: none;
+  }
+  .tab.active {
+    border-color: #2d89e5;
+    font-weight: bold;
+  }
+  ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  li {
+    background: #eee;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  li.completed {
+    text-decoration: line-through;
+    color: gray;
+  }
+  .task-info {
+    flex-grow: 1;
+  }
+  .due-date {
+    font-size: 0.85rem;
+    color: #555;
+    margin-left: 1rem;
+  }
+  .btn-group button {
+    margin-left: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-edit {
+    background-color: #ffc107;
+    color: #333;
+  }
+  .btn-delete {
+    background-color: #dc3545;
+    color: white;
+  }
+  .btn-complete {
+    background-color: #28a745;
+    color: white;
+  }
+  .btn-logout {
+    background-color: #dc3545;
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    float: right;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    max-width: 400px;
+    width: 90%;
+  }
+  .modal-content h3 {
+    margin-top: 0;
+  }
+  .modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .modal-content input[type="text"],
+  .modal-content input[type="date"] {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+  .modal-content button {
+    margin-top: 1rem;
+  }
+  .modal.show {
+    display: flex;
+  }
+</style>
+</head>
+<body>
+
+<div id="loginRegister">
+  <div class="tabs">
+    <div id="tabLogin" class="tab active">Login</div>
+    <div id="tabRegister" class="tab">Register</div>
+  </div>
+
+  <div id="loginFormContainer">
+    <form id="loginForm">
+      <div class="error" id="loginError"></div>
+      <input type="text" id="loginUsername" placeholder="Username" required />
+      <input type="password" id="loginPassword" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <div id="registerFormContainer" style="display:none;">
+    <form id="registerForm">
+      <div class="error" id="registerError"></div>
+      <input type="text" id="registerUsername" placeholder="Username" required />
+      <input type="password" id="registerPassword" placeholder="Password" required />
+      <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" required />
+      <button type="submit">Register</button>
+    </form>
+  </div>
+</div>
+
+<div id="todoApp" class="container" style="display:none;">
+  <button id="logoutBtn" class="btn-logout">Logout</button>
+  <h1>To-Do List</h1>
+  <form id="addTaskForm">
+    <input type="text" id="taskInput" placeholder="Masukkan tugas baru..." required />
+    <input type="date" id="dueDateInput" required />
+    <button type="submit">Tambah</button>
+  </form>
+
+  <ul id="taskList"></ul>
+
+  <div class="history">
+    <h2>Riwayat Tugas</h2>
+    <ul id="historyList">
+      <li>Belum ada riwayat tugas.</li>
+    </ul>
+  </div>
+</div>
+
+<div id="editTaskModal" class="modal">
+  <div class="modal-content">
+    <h3>Edit Tugas</h3>
+    <form id="editTaskForm">
+      <input type="hidden" id="editTaskId" />
+      <input type="text" id="editTaskInput" required />
+      <input type="date" id="editDueDateInput" required />
+      <button type="submit">Simpan</button>
+      <button type="button" id="cancelEditBtn">Batal</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(() => {
+  const usersKey = 'todo_users';
+  let currentUser = null;
+
+  // --- Utils ---
+  function saveToStorage(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+  function getFromStorage(key) {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : null;
+  }
+
+  // User management
+  function getUsers() {
+    return getFromStorage(usersKey) || [];
+  }
+  function saveUsers(users) {
+    saveToStorage(usersKey, users);
+  }
+
+  function findUser(username) {
+    return getUsers().find(u => u.username.toLowerCase() === username.toLowerCase());
+  }
+
+  // Password hashing (simple)
+  function hashPassword(pw) {
+    // Simple hash: btoa. Not secure for real use, but enough for this demo.
+    return btoa(pw);
+  }
+
+  // Login/Register 
+  const loginRegisterDiv = document.getElementById('loginRegister');
+  const todoAppDiv = document.getElementById('todoApp');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const loginFormContainer = document.getElementById('loginFormContainer');
+  const registerFormContainer = document.getElementById('registerFormContainer');
+
+  const loginForm = document.getElementById('loginForm');
+  const loginUsername = document.getElementById('loginUsername');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginError = document.getElementById('loginError');
+
+  const registerForm = document.getElementById('registerForm');
+  const registerUsername = document.getElementById('registerUsername');
+  const registerPassword = document.getElementById('registerPassword');
+  const registerPasswordConfirm = document.getElementById('registerPasswordConfirm');
+  const registerError = document.getElementById('registerError');
+
+  // Switch tabs
+  tabLogin.addEventListener('click', () => {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    loginFormContainer.style.display = 'block';
+    registerFormContainer.style.display = 'none';
+    clearErrors();
+  });
+  tabRegister.addEventListener('click', () => {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    registerFormContainer.style.display = 'block';
+    loginFormContainer.style.display = 'none';
+    clearErrors();
+  });
+
+  function clearErrors() {
+    loginError.textContent = '';
+    registerError.textContent = '';
+  }
+
+  //  User Auth 
+  function login(username, password) {
+    const user = findUser(username);
+    if (!user) {
+      loginError.textContent = 'User tidak ditemukan.';
+      return false;
+    }
+    if (user.password !== hashPassword(password)) {
+      loginError.textContent = 'Password salah.';
+      return false;
+    }
+    currentUser = user.username;
+    return true;
+  }
+
+  function register(username, password, passwordConfirm) {
+    if (findUser(username)) {
+      registerError.textContent = 'Username sudah digunakan.';
+      return false;
+    }
+    if (password !== passwordConfirm) {
+      registerError.textContent = 'Password dan konfirmasi tidak cocok.';
+      return false;
+    }
+    if (password.length < 4) {
+      registerError.textContent = 'Password minimal 4 karakter.';
+      return false;
+    }
+    const users = getUsers();
+    users.push({
+      username,
+      password: hashPassword(password)
+    });
+    saveUsers(users);
+    return true;
+  }
+
+  // To-Do Storage per user
+  function getUserTasks() {
+    const tasks = getFromStorage('tasks_' + currentUser);
+    return tasks || [];
+  }
+  function saveUserTasks(tasks) {
+    saveToStorage('tasks_' + currentUser, tasks);
+  }
+  function getUserHistory() {
+    const history = getFromStorage('history_' + currentUser);
+    return history || [];
+  }
+  function saveUserHistory(history) {
+    saveToStorage('history_' + currentUser, history);
+  }
+
+  // To-Do UI 
+  const taskInput = document.getElementById('taskInput');
+  const dueDateInput = document.getElementById('dueDateInput');
+  const addTaskForm = document.getElementById('addTaskForm');
+  const taskList = document.getElementById('taskList');
+  const historyList = document.getElementById('historyList');
+
+  const editTaskModal = document.getElementById('editTaskModal');
+  const editTaskForm = document.getElementById('editTaskForm');
+  const editTaskId = document.getElementById('editTaskId');
+  const editTaskInput = document.getElementById('editTaskInput');
+  const editDueDateInput = document.getElementById('editDueDateInput');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+  // Render daftar tugas
+  function loadTasks() {
+    const tasks = getUserTasks();
+    if (tasks.length === 0) {
+      taskList.innerHTML = '<li>Tidak ada tugas saat ini.</li>';
+      return;
+    }
+
+    // Urutkan berdasar tanggal due (terdekat di atas)
+    tasks.sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
+
+    taskList.innerHTML = '';
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = task.status === 'completed' ? 'completed' : '';
+      li.innerHTML = `
+        <div class="task-info">
+          ${task.task}
+          <span class="due-date">[Batas: ${task.due_date}]</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn-edit" data-id="${task.id}" data-task="${task.task}" data-due="${task.due_date}">Edit</button>
+          <button class="btn-delete" data-id="${task.id}">Hapus</button>
+          ${task.status !== 'completed' ? `<button class="btn-complete" data-id="${task.id}">Selesai</button>` : ''}
+        </div>
+      `;
+      taskList.appendChild(li);
+    });
+  }
+
+  // Load riwayat tugas
+  function loadHistory() {
+    let history = getUserHistory();
+    if (history.length === 0) {
+      historyList.innerHTML = '<li>Belum ada riwayat tugas.</li>';
+      return;
+    }
+    history.sort((a,b) => new Date(b.deleted_at) - new Date(a.deleted_at));
+    historyList.innerHTML = '';
+    history.forEach(item => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <strong>${item.task}</strong> <small>(Batas: ${item.due_date})</small><br />
+        Status: <em>${item.status === 'completed' ? 'Selesai' : 'Dihapus'}</em><br />
+        Dihapus/Selesai pada: ${item.deleted_at}
+      `;
+      historyList.appendChild(li);
+    });
+  }
+
+  // Generate ID unik sederhana
+  function generateId() {
+    return '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  // Add task
+  addTaskForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const task = taskInput.value.trim();
+    const due_date = dueDateInput.value;
+    if (!task || !due_date) return;
+
+    let tasks = getUserTasks();
+    tasks.push({
+      id: generateId(),
+      task,
+      due_date,
+      status: 'pending'
+    });
+    saveUserTasks(tasks);
+
+    taskInput.value = '';
+    dueDateInput.value = '';
+    loadTasks();
+  });
+
+  // Task list event (delegation)
+  taskList.addEventListener('click', e => {
+    const target = e.target;
+
+    // Edit
+    if (target.classList.contains('btn-edit')) {
+      const id = target.dataset.id;
+      const taskText = target.dataset.task;
+      const due = target.dataset.due;
+      editTaskId.value = id;
+      editTaskInput.value = taskText;
+      editDueDateInput.value = due;
+      editTaskModal.classList.add('show');
+    }
+
+    // Delete
+    if (target.classList.contains('btn-delete')) {
+      if (!confirm('Yakin ingin menghapus tugas ini?')) return;
+      const id = target.dataset.id;
+      let tasks = getUserTasks();
+      let history = getUserHistory();
+
+      const index = tasks.findIndex(t => t.id === id);
+      if (index !== -1) {
+        const deletedTask = tasks.splice(index, 1)[0];
+        deletedTask.status = 'deleted';
+        deletedTask.deleted_at = new Date().toLocaleString();
+        history.push(deletedTask);
+
+        saveUserTasks(tasks);
+        saveUserHistory(history);
+        loadTasks();
+        loadHistory();
+      }
+    }
+
+    // Complete
+    if (target.classList.contains('btn-complete')) {
+      const id = target.dataset.id;
+      let tasks = getUserTasks();
+      let history = getUserHistory();
+
+      const index = tasks.findIndex(t => t.id === id);
+      if (index !== -1) {
+        tasks[index].status = 'completed';
+        tasks[index].completed_at = new Date().toLocaleString();
+
+        // Tambah ke history
+        const doneTask = {...tasks[index]};
+        doneTask.deleted_at = tasks[index].completed_at;
+        history.push(doneTask);
+
+        saveUserTasks(tasks);
+        saveUserHistory(history);
+        loadTasks();
+        loadHistory();
+      }
+    }
+  });
+
+  // Edit task modal
+  editTaskForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const id = editTaskId.value;
+    const newTask = editTaskInput.value.trim();
+    const newDue = editDueDateInput.value;
+
+    if (!newTask || !newDue) return;
+
+    let tasks = getUserTasks();
+    const index = tasks.findIndex(t => t.id === id);
+    if (index !== -1) {
+      tasks[index].task = newTask;
+      tasks[index].due_date = newDue;
+      saveUserTasks(tasks);
+      loadTasks();
+    }
+    editTaskModal.classList.remove('show');
+  });
+
+  cancelEditBtn.addEventListener('click', () => {
+    editTaskModal.classList.remove('show');
+  });
+
+  // Logout
+  logoutBtn.addEventListener('click', () => {
+    currentUser = null;
+    todoAppDiv.style.display = 'none';
+    loginRegisterDiv.style.display = 'block';
+    clearInputs();
+  });
+
+  // Clear form inputs & errors
+  function clearInputs() {
+    loginUsername.value = '';
+    loginPassword.value = '';
+    registerUsername.value = '';
+    registerPassword.value = '';
+    registerPasswordConfirm.value = '';
+    clearErrors();
+  }
+
+  // Form submit handlers 
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    clearErrors();
+    const username = loginUsername.value.trim();
+    const password = loginPassword.value.trim();
+    if (!username || !password) return;
+
+    if (login(username, password)) {
+      // Login berhasil
+      loginRegisterDiv.style.display = 'none';
+      todoAppDiv.style.display = 'block';
+      currentUser = username;
+      loadTasks();
+      loadHistory();
+    }
+  });
+
+  registerForm.addEventListener('submit', e => {
+    e.preventDefault();
+    clearErrors();
+    const username = registerUsername.value.trim();
+    const password = registerPassword.value.trim();
+    const passwordConfirm = registerPasswordConfirm.value.trim();
+
+    if (!username || !password || !passwordConfirm) return;
+
+    if (register(username, password, passwordConfirm)) {
+      alert('Registrasi berhasil. Silakan login.');
+      tabLogin.click();
+      clearInputs();
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
