@@ -234,7 +234,6 @@
   const usersKey = 'todo_users';
   let currentUser = null;
 
-  // --- Utils ---
   function saveToStorage(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   }
@@ -255,7 +254,7 @@
     return getUsers().find(u => u.username.toLowerCase() === username.toLowerCase());
   }
 
-  // Password hashing (simple)
+  // Password hashing 
   function hashPassword(pw) {
     // Simple hash: btoa. Not secure for real use, but enough for this demo.
     return btoa(pw);
@@ -303,7 +302,6 @@
     registerError.textContent = '';
   }
 
-  //  User Auth 
   function login(username, password) {
     const user = findUser(username);
     if (!user) {
@@ -340,7 +338,6 @@
     return true;
   }
 
-  // To-Do Storage per user
   function getUserTasks() {
     const tasks = getFromStorage('tasks_' + currentUser);
     return tasks || [];
@@ -356,7 +353,6 @@
     saveToStorage('history_' + currentUser, history);
   }
 
-  // To-Do UI 
   const taskInput = document.getElementById('taskInput');
   const dueDateInput = document.getElementById('dueDateInput');
   const addTaskForm = document.getElementById('addTaskForm');
@@ -378,7 +374,6 @@
       return;
     }
 
-    // Urutkan berdasar tanggal due (terdekat di atas)
     tasks.sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
 
     taskList.innerHTML = '';
@@ -420,7 +415,7 @@
     });
   }
 
-  // Generate ID unik sederhana
+  // Generate ID 
   function generateId() {
     return '_' + Math.random().toString(36).substr(2, 9);
   }
@@ -506,7 +501,6 @@
     }
   });
 
-  // Edit task modal
   editTaskForm.addEventListener('submit', e => {
     e.preventDefault();
     const id = editTaskId.value;
